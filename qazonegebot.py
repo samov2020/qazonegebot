@@ -136,7 +136,4 @@ bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
                 certificate=open(WEBHOOK_SSL_CERT, 'r'))
 
 # Start flask server
-app.run(host=WEBHOOK_LISTEN,
-        port=WEBHOOK_PORT,
-        ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV),
-        debug=True)v
+app.run(host=WEBHOOK_LISTEN, port=WEBHOOK_PORT, ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV), debug = True)
