@@ -1,7 +1,48 @@
 import telebot
 from telebot import types
+import logging
+import time
+import flask
+import os
 
-bot = telebot.TeleBot('1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg')
+API_TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
+
+WEBHOOK_HOST = 'https://qazonegebot.herokuapp.com/'
+WEBHOOK_PORT = int(os.environ.get('PORT', 5000))  # 443, 80, 88 or 8443 (port need to be 'open')
+WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
+
+WEBHOOK_SSL_CERT = './qazonegebot.herokuapp.com.key'  # Path to the ssl certificate
+WEBHOOK_SSL_PRIV = './qazonegebot.herokuapp.com.cert'  # Path to the ssl private key
+
+
+WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
+WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
+
+logger = telebot.logger
+telebot.logger.setLevel(logging.INFO)
+
+
+app = flask.Flask(__name__)
+bot = telebot.TeleBot(API_TOKEN)
+
+# Empty webserver index, return nothing, just http 200
+@app.route('/', methods=['GET', 'HEAD'])
+def index():
+    return ''
+
+
+# Process webhook calls
+@app.route(WEBHOOK_URL_PATH, methods=['POST'])
+def webhook():
+    if flask.request.headers.get('content-type') == 'application/json':
+        json_string = flask.request.get_data().decode('utf-8')
+        update = telebot.types.Update.de_json(json_string)
+        bot.process_new_updates([update])
+        return ''
+    else:
+        flask.abort(403)
+
+
 user = bot.get_me()
 
 ### Language choice
