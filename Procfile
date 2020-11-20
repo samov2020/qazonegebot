@@ -1,1 +1,1 @@
-web: python qazonegebot.py
+web: python33 qazonegebot.py
