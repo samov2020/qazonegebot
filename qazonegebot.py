@@ -21,7 +21,7 @@ TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
 #logger = telebot.logger
 #telebot.logger.setLevel(logging.INFO)
 
-#server = Flask(__name__)
+server = Flask(__name__)
 
 
 bot = telebot.TeleBot(API_TOKEN)
@@ -109,24 +109,17 @@ def callback_inline(call):
         elif call.data == 'lang':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Тілді таңдаңыз:/Выберите язык:',reply_markup = languageMarkup)
 
-if __name__ == "__main__":
-    if "HEROKU" in list(os.environ.keys()):
-        logger = telebot.logger
-        telebot.logger.setLevel(logging.INFO)
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
 
-        server = Flask(__name__)
-        @server.route("/bot", methods=['POST'])
-        def getMessage():
-            bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-            return "!", 200
-        @server.route("/")
-        def webhook():
-            bot.remove_webhook()
-            bot.set_webhook(url="https://qazonegebot.herokuapp.com/1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg") # этот url нужно заменить на url вашего Хероку приложения
-            return "?", 200
-        server.run(host="0.0.0.0", port=os.environ.get('PORT', 5000))
-    else:
-        # если переменной окружения HEROKU нету, значит это запуск с машины разработчика.  
-        # Удаляем вебхук на всякий случай, и запускаем с обычным поллингом.
-        bot.remove_webhook()
-        bot.polling(none_stop=True)
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://qazonegebot.herokuapp.com/' + TOKEN)
+    return "!", 200
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
