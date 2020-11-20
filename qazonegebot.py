@@ -8,27 +8,23 @@ from flask import Flask, request
 
 API_TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
 TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
-WEBHOOK_HOST = 'https://qazonegebot.herokuapp.com/'
-WEBHOOK_PORT = int(os.environ.get('PORT', 5000))  # 443, 80, 88 or 8443 (port need to be 'open')
-WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
+#WEBHOOK_HOST = 'https://qazonegebot.herokuapp.com/'
+#WEBHOOK_PORT = int(os.environ.get('PORT', 5000))  # 443, 80, 88 or 8443 (port need to be 'open')
+#WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
 
-WEBHOOK_SSL_CERT = './qazonegebot.herokuapp.com.key'  # Path to the ssl certificate
-WEBHOOK_SSL_PRIV = './qazonegebot.herokuapp.com.cert'  # Path to the ssl private key
+#WEBHOOK_SSL_CERT = './qazonegebot.herokuapp.com.key'  # Path to the ssl certificate
+#WEBHOOK_SSL_PRIV = './qazonegebot.herokuapp.com.cert'  # Path to the ssl private key
+
+#WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
+#WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
+
+#logger = telebot.logger
+#telebot.logger.setLevel(logging.INFO)
+
+#server = Flask(__name__)
 
 
-WEBHOOK_URL_BASE = "https://%s:%s" % (WEBHOOK_HOST, WEBHOOK_PORT)
-WEBHOOK_URL_PATH = "/%s/" % (API_TOKEN)
-
-logger = telebot.logger
-telebot.logger.setLevel(logging.INFO)
-
-
-server = Flask(__name__)
 bot = telebot.TeleBot(API_TOKEN)
-
-
-
-
 user = bot.get_me()
 
 ### Language choice
@@ -113,20 +109,24 @@ def callback_inline(call):
         elif call.data == 'lang':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Тілді таңдаңыз:/Выберите язык:',reply_markup = languageMarkup)
 
-bot.remove_webhook()
-
-@server.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
-    return "!", 200
-
-
-@server.route("/")
-def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url='https://qazonegebot.herokuapp.com/' + TOKEN)
-    return "!", 200
-
 if __name__ == "__main__":
-    server.debug = True
-    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+if "HEROKU" in list(os.environ.keys()):
+    logger = telebot.logger
+    telebot.logger.setLevel(logging.INFO)
+
+    server = Flask(__name__)
+    @server.route("/bot", methods=['POST'])
+    def getMessage():
+        bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+        return "!", 200
+    @server.route("/")
+    def webhook():
+        bot.remove_webhook()
+        bot.set_webhook(url="https://qazonegebot.herokuapp.com/") # этот url нужно заменить на url вашего Хероку приложения
+        return "?", 200
+    server.run(host="0.0.0.0", port=os.environ.get('PORT', 5000))
+else:
+    # если переменной окружения HEROKU нету, значит это запуск с машины разработчика.  
+    # Удаляем вебхук на всякий случай, и запускаем с обычным поллингом.
+    bot.remove_webhook()
+    bot.polling(none_stop=True)
