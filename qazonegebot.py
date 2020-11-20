@@ -131,9 +131,11 @@ bot.remove_webhook()
 
 time.sleep(0.1)
 
-# Set webhook
-bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
-                certificate=open(WEBHOOK_SSL_CERT, 'r'))
-
-# Start flask server
-app.run(host=WEBHOOK_LISTEN, port=WEBHOOK_PORT, ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV), debug = True)
+PORT = int(os.environ.get('PORT', '8443'))
+updater = Updater(API_TOKEN)
+# add handlers
+updater.start_webhook(listen="0.0.0.0",
+                      port=PORT,
+                      url_path=API_TOKEN)
+updater.bot.set_webhook("https://qazonegebot.herokuapp.com/" + API_TOKEN)
+updater.idle()
