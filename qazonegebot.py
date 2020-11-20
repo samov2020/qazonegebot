@@ -4,9 +4,10 @@ import logging
 import time
 import flask
 import os
-from telegram.ext import Updater
-API_TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
+from flask import Flask, request
 
+API_TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
+TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
 WEBHOOK_HOST = 'https://qazonegebot.herokuapp.com/'
 WEBHOOK_PORT = int(os.environ.get('PORT', 5000))  # 443, 80, 88 or 8443 (port need to be 'open')
 WEBHOOK_LISTEN = '0.0.0.0'  # In some VPS you may need to put here the IP addr
@@ -22,25 +23,10 @@ logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
 
 
-app = flask.Flask(__name__)
+server = Flask(__name__)
 bot = telebot.TeleBot(API_TOKEN)
 
-# Empty webserver index, return nothing, just http 200
-@app.route('/', methods=['GET', 'HEAD'])
-def index():
-    return ''
 
-
-# Process webhook calls
-@app.route(WEBHOOK_URL_PATH, methods=['POST'])
-def webhook():
-    if flask.request.headers.get('content-type') == 'application/json':
-        json_string = flask.request.get_data().decode('utf-8')
-        update = telebot.types.Update.de_json(json_string)
-        bot.process_new_updates([update])
-        return ''
-    else:
-        flask.abort(403)
 
 
 user = bot.get_me()
@@ -129,13 +115,17 @@ def callback_inline(call):
 
 bot.remove_webhook()
 
-time.sleep(0.1)
+@server.route('/' + TOKEN, methods=['POST'])
+def getMessage():
+    bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
+    return "!", 200
 
-PORT = int(os.environ.get('PORT', '8443'))
-updater = Updater(API_TOKEN)
-# add handlers
-updater.start_webhook(listen="0.0.0.0",
-                      port=PORT,
-                      url_path=API_TOKEN)
-updater.bot.set_webhook("https://qazonegebot.herokuapp.com/" + API_TOKEN)
-updater.idle()
+
+@server.route("/")
+def webhook():
+    bot.remove_webhook()
+    bot.set_webhook(url='https://qazonegebot.com/' + TOKEN)
+    return "!", 200
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
