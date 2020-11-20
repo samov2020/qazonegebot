@@ -4,7 +4,7 @@ import logging
 import time
 import flask
 import os
-
+from telegram.ext import Updater
 API_TOKEN = '1418888936:AAHSr7P3oWrQTtaEL2DDrc2pkIithtZFCJg'
 
 WEBHOOK_HOST = 'https://qazonegebot.herokuapp.com/'
