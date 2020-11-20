@@ -1,1 +1,1 @@
-web: python qazonege.py
+web: python qazonegebot.py
