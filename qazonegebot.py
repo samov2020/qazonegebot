@@ -127,8 +127,16 @@ def callback_inline(call):
         elif call.data == 'lang':
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Тілді таңдаңыз:/Выберите язык:',reply_markup = languageMarkup)
 
-while True:
-    try:
-        bot.polling(none_stop=True, interval=0, timeout=0)
-    except:
-        time.sleep(10)
+bot.remove_webhook()
+
+time.sleep(0.1)
+
+# Set webhook
+bot.set_webhook(url=WEBHOOK_URL_BASE + WEBHOOK_URL_PATH,
+                certificate=open(WEBHOOK_SSL_CERT, 'r'))
+
+# Start flask server
+app.run(host=WEBHOOK_LISTEN,
+        port=WEBHOOK_PORT,
+        ssl_context=(WEBHOOK_SSL_CERT, WEBHOOK_SSL_PRIV),
+        debug=True)v
